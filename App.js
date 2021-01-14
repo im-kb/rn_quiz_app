@@ -2,11 +2,9 @@ import React, {useState, useEffect, Component} from 'react';
 import {
     FlatList,
     SafeAreaView,
-    StatusBar,
     StyleSheet,
     Text,
     TouchableOpacity,
-    Button,
     View,
     Image,
     ScrollView,
@@ -16,20 +14,16 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createDrawerNavigator} from '@react-navigation/drawer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SplashScreen from 'react-native-splash-screen';
-import {DrawerContentScrollView, DrawerItemList, DrawerItem} from '@react-navigation/drawer';
+import {DrawerContentScrollView} from '@react-navigation/drawer';
 import SQLite from 'react-native-sqlite-storage';
 import NetInfo from '@react-native-community/netinfo';
 
-
 const _ = require('lodash');
 console.disableYellowBox = true;
+
 let db;
-let check;
 var yourScore = 0;
 const STORAGE_KEY = '@save_rule_status';
-const checkInternet = NetInfo.addEventListener(state => {
-    check = state.isConnected;
-});
 
 const wait = (timeout) => {
     return new Promise(resolve => {
@@ -56,7 +50,6 @@ function WelcomeScreen({navigation}) {
             console.log(err);
         }
     };
-
 
     const getData = async () => {
         try {
@@ -90,7 +83,6 @@ function WelcomeScreen({navigation}) {
         </View>
     );
 }
-
 
 class HomeScreen extends Component {
     constructor(props) {
@@ -150,7 +142,7 @@ class HomeScreen extends Component {
         });
     }
 
-    async getAllTags(db) {
+    async getAllTagsAndTests(db) {
         const query = 'SELECT * FROM tags;';
         let table = [];
         db.transaction(tx => {
@@ -193,15 +185,6 @@ class HomeScreen extends Component {
         });
     }
 
-    async getData(id) {
-        return await fetch('http://tgryl.pl/quiz/test/' + id)
-            .then((response) => response.json())
-            .then((json) => {
-                return json;
-            })
-            .catch((error) => console.error(error));
-    }
-
     async navigateTest(navigation, prop_test) {
         const details = this.state.details;
         details.forEach((item, i) => {
@@ -215,7 +198,6 @@ class HomeScreen extends Component {
             }
         });
     }
-
 
     async checkLocalDB() {
         const dateFromStorage = await AsyncStorage.getItem('CurrentDate');
@@ -237,16 +219,14 @@ class HomeScreen extends Component {
                 '-' +
                 new Date().getFullYear().toString(),
             );
-            this.getAllTags(db);
-            this.getAllTests(db);
+            this.getAllTagsAndTests(db);
             alert('Tests downloaded to local database');
         }
     }
 
     componentDidMount() {
         this.checkLocalDB();
-        this.getAllTags(db);
-        this.getAllTests(db);
+        this.getAllTagsAndTests(db);
     }
 
     render() {
@@ -529,7 +509,6 @@ function ResultScreen({navigation}) {
     );
 }
 
-
 class CustomDrawerContent extends Component {
     constructor(props) {
         super(props);
@@ -589,7 +568,7 @@ class CustomDrawerContent extends Component {
         });
     }
 
-    async getAllTags(db) {
+    async getAllTagsAndTests(db) {
         const query = 'SELECT * FROM tags;';
         let table = [];
         db.transaction(tx => {
@@ -632,19 +611,6 @@ class CustomDrawerContent extends Component {
         });
     }
 
-    async getData(id) {
-        try {
-            return await fetch('http://tgryl.pl/quiz/test/' + id)
-                .then((response) => response.json())
-                .then((json) => {
-                    return json;
-                })
-                .catch((error) => console.error(error));
-        } catch (err) {
-            console.log(err);
-        }
-    }
-
     async navigateTest(navigation, prop_test) {
         const details = this.state.details;
         details.forEach((item, i) => {
@@ -660,7 +626,7 @@ class CustomDrawerContent extends Component {
     }
 
     componentDidMount() {
-        this.getAllTags(db);
+        this.getAllTagsAndTests(db);
     }
 
     render() {
@@ -822,7 +788,7 @@ class App extends Component {
         });
     }
 
-    async getAllTags(db) {
+    async getAllTagsAndTests(db) {
         const query = 'SELECT * FROM tags;';
         let table = [];
         db.transaction(tx => {
@@ -866,8 +832,6 @@ class App extends Component {
     }
 
     componentDidMount() {
-        this.getAllTags(db);
-        this.getAllTests(db);
         SplashScreen.hide();
         NetInfo.fetch().then(state => {
             if (state.isConnected == true) {
@@ -887,7 +851,7 @@ class App extends Component {
                     })
                     .catch((error) => console.error(error));
             } else {
-                this.getAllTags(db);
+                this.getAllTagsAndTests(db);
                 alert('No network connection, using local database');
             }
         });
@@ -961,7 +925,7 @@ const styles = StyleSheet.create({
     questionText: {
         textAlign: 'center',
         padding: 15,
-        fontSize: 24,
+        fontSize: 20,
         fontFamily: 'Roboto-Light',
         flex: 1,
 
